@@ -97,6 +97,7 @@ SunMoonCalc::Moon moonData;
 void updateData();
 void drawProgress(uint8_t percentage, String text);
 void drawTime();
+void drawMetric();
 void drawWifiQuality();
 void drawCurrentWeather();
 void drawForecast();
@@ -160,6 +161,7 @@ void initTime() {
   configTime(TIMEZONE.c_str(), NTP_SERVERS);
   int i = 1;
   while ((now = time(nullptr)) < NTP_MIN_VALID_EPOCH) {
+    Serial.printf("time = %u \r\n", now);
     drawProgress(i * 10, "Updating time...");
     Serial.print(".");
     delay(300);
@@ -234,28 +236,38 @@ bool btnClick;
 uint8_t MAX_TOUCHPOINTS = 10;
 TS_Point points[10];
 uint8_t currentTouchPoint = 0;
+static long touchDebounce = 0;
 
 void loop() {
   static bool asleep = false; //  asleep used to stop screen change after touch for wake-up
   gfx.fillBuffer(MINI_BLACK);
   if (touchController.isTouched(0)) {
-    TS_Point p = touchController.getPoint();
-    timerPress = millis();
-
-    Serial.printf("Touch point detected at %d/%d.\n", p.x, p.y);
-    if (!asleep) { // no need to change screens;
-      if (p.y < 80) {
-        IS_STYLE_12HR = !IS_STYLE_12HR;
-      } else {
-        screen = (screen + 1) % screenCount;
-      }
-    }
+      TS_Point p = touchController.getPoint();
+      timerPress = millis();
+  
+      Serial.printf("Touch point detected at %d/%d.\n", p.x, p.y);
+      if (!asleep) { // no need to change screens;
+        if (millis() - touchDebounce > DEBOUNCE_TIME){ // if touchs are less than 20ms apart, disregard
+          touchDebounce = millis(); // Set debounce for next touch
+          if (p.y < 35 && screen == 0 ){
+            if (p.x < 35){ // top left corner, toggles degC and degF
+              IS_METRIC = !IS_METRIC;
+            }
+            else { // top strip, from pt 30x changes time format, 12Hr and 24Hr
+              IS_STYLE_12HR = !IS_STYLE_12HR;
+            }
+          }
+          else { // area below top strip changes page.
+            screen = (screen + 1) % screenCount;
+          }
+        }
+     }
   } // isTouched()
 
   if (!(asleep = sleep_mode())) {
     if (screen == 0) {
       drawTime();
-
+      drawMetric();
       drawWifiQuality();
       int remainingTimeBudget = carousel.update();
       if (remainingTimeBudget > 0) {
@@ -387,6 +399,13 @@ void drawProgress(uint8_t percentage, String text) {
   gfx.commit();
 }
 
+// draws the deg selection icon
+void drawMetric(){
+ gfx.setTextAlignment(TEXT_ALIGN_LEFT);
+ gfx.setFont(ArialRoundedMTBold_14);
+ gfx.drawString(10, 20, "C/F");
+}
+
 // draws the clock
 void drawTime() {
   char time_str[11];
@@ -419,7 +438,7 @@ void drawTime() {
   gfx.drawString(120, 20, time_str);
 
   gfx.setTextAlignment(TEXT_ALIGN_LEFT);
-  gfx.setFont(ArialMT_Plain_10);
+  gfx.setFont(ArialMT_Plain_24);
   gfx.setColor(MINI_BLUE);
   if (IS_STYLE_12HR) {
     sprintf(time_str, "\n%s", timeinfo->tm_hour >= 12 ? "PM" : "AM");

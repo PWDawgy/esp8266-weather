@@ -43,8 +43,8 @@ result set and select the entry closest to the actual location you want to displ
 data for. It'll be a URL like https://openweathermap.org/city/2657896. The number
 at the end is what you assign to the constant below.
  */
-String OPEN_WEATHER_MAP_LOCATION_ID = "2657896";
-String DISPLAYED_LOCATION_NAME = "Zurich";
+String OPEN_WEATHER_MAP_LOCATION_ID = "4945848";
+String DISPLAYED_LOCATION_NAME = "Northbridge";
 /*
 Arabic -> ar, Bulgarian -> bg, Catalan -> ca, Czech -> cz, German -> de, Greek -> el,
 English -> en, Persian (Farsi) -> fa, Finnish -> fi, French -> fr, Galician -> gl,
@@ -64,7 +64,7 @@ const String MOON_PHASES[] = {"New Moon", "Waxing Crescent", "First Quarter", "W
                               "Full Moon", "Waning Gibbous", "Third quarter", "Waning Crescent"};
 
 // pick one from TZinfo.h
-String TIMEZONE = getTzInfo("Europe/Zurich");
+String TIMEZONE = getTzInfo("America/New_York");
 
 // values in metric or imperial system?
 bool IS_METRIC = true;
@@ -81,6 +81,9 @@ bool IS_STYLE_HHMM = false; // true => HH:MM
 
 // August 1st, 2018
 #define NTP_MIN_VALID_EPOCH 1533081600
+
+// set the hold off time between allowable touch point updates, expressed in ms.
+#define DEBOUNCE_TIME 500
 
 // Pins for the ILI9341
 #define TFT_DC D2
